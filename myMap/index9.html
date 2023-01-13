@@ -1,27 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Display a map</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.1.0/ol.css">
-  <script src="https://cdn.jsdelivr.net/npm/ol@v7.1.0/dist/ol.js"></script>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-    }
-    #map {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 100%;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display a map</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.1.0/ol.css">
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.1.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js"></script>
+    
+    <!-- leaflet draw plugin  -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
 </head>
+
 <body>
     <div id="map"></div>
 </body>
+
 <script>
     var markers = [];
     var marker2;
@@ -35,7 +45,7 @@
     var pracaNoronhaSantos = ol.proj.fromLonLat([-43.19848881797589, -22.906644586771165]);
     var pracaDeodoro = ol.proj.fromLonLat([-43.17509995536603, -22.91395763413628]);
     var listLonLat = [
-    [-43.19821603433218, -22.906235579377366],
+        [-43.19821603433218, -22.906235579377366],
         [-43.19787271157827, -22.90637393840575],
         [-43.1976795925292, -22.906907607621335],
         [-43.197228981414696, -22.906966904071183],
@@ -140,7 +150,11 @@
         collapsible: false,
     });
 
-    const map = new ol.Map({
+
+    var map = L.map('map').setView([28.2096, 83.9856], 14);
+
+// Add the OpenStreetMap tiles
+var osm = new ol.Map({
         layers: [
             new ol.layer.Tile({
             source: source
@@ -154,6 +168,66 @@
             zoom: 14
         })
     });
+
+ 
+    var drawnFeatures = new L.FeatureGroup();
+    map.addLayer(drawnFeatures);
+
+    var drawControl = new L.Control.Draw({
+        // position: "topright",
+        edit: {
+            featureGroup: drawnFeatures,
+            remove: false
+        },
+        draw: {
+		    polygon: {
+		     shapeOptions: {
+		      color: 'purple'
+		     },
+		    //  allowIntersection: false,
+		    //  drawError: {
+		    //   color: 'orange',
+		    //   timeout: 1000
+		    //  },
+		    },
+		    polyline: {
+		     shapeOptions: {
+		      color: 'red'
+		     },
+		    },
+		    rect: {
+		     shapeOptions: {
+		      color: 'green'
+		     },
+		    },
+		    circle: {
+		     shapeOptions: {
+		      color: 'steelblue'
+		     },
+		    },
+		   },
+ 
+    });
+    map.addControl(drawControl);
+
+    map.on("draw:created", function(e){
+        var type = e.layerType;
+        var layer = e.layer;
+        console.log(layer.toGeoJSON())
+
+        layer.bindPopup(`<p>${JSON.stringify(layer.toGeoJSON())}</p>`)
+        drawnFeatures.addLayer(layer);
+    });
+
+    map.on("draw:edited", function(e){
+        var layers = e.layers;
+        var type = e.layerType;
+
+        layers.eachLayer(function(layer){
+            console.log(layer)
+        })
+        
+    })
 
     function DeleteMarkers() {
         //Loop through all the markers and remove
@@ -179,7 +253,7 @@
                 anchor: [0.5, 1],
                 crossOrigin: 'anonymous',
                 src: 'https://docs.maptiler.com/openlayers/default-marker/marker-icon.png',
-                
+
             })
         })
     })
@@ -187,13 +261,13 @@
     map.addLayer(marker);
 
     function SetRotation(locationS, locationE) {
-        if(Math.abs(locationS[0] - locationE[0]) < 0.0000000000000000000000001){
+        if (Math.abs(locationS[0] - locationE[0]) < 0.0000000000000000000000001) {
             return 90;
-        } else{
+        } else {
             return Math.atan2((locationE[0] - locationS[0]), (locationE[1] - locationS[1]));
         }
     };
-    
+
 
     function AddMarker(locationS, rotationA) {
 
@@ -207,7 +281,6 @@
                     })
                 ],
             }),
-        
             style: new ol.style.Style({
                 image: new ol.style.Icon({
                     anchor: [15, 15],
@@ -222,7 +295,7 @@
 
         markers.push(marker2);
 
-        if(markers.length > 0){
+        if (markers.length > 0) {
             DeleteMarkers();
         }
 
@@ -233,27 +306,27 @@
 
         //let num = Math.floor(Math.random() * 93);
 
-        if(time <= 0){
+        if (time <= 0) {
             dr = true;
         }
-          
-        if(time >= listLonLat.length - 1){
+
+        if (time >= listLonLat.length - 1) {
             dr = false;
         }
-        
-        if(dr == true){
+
+        if (dr == true) {
             locationS = [listLonLat[time][0], listLonLat[time][1]];
             locationE = [listLonLat[time + 1][0], listLonLat[time + 1][1]];
             rotationA = SetRotation(locationS, locationE);
             console.log(rotationA);
-            time ++;
+            time++;
         }
-        else{
+        else {
             locationS = [listLonLat[time][0], listLonLat[time][1]];
             locationE = [listLonLat[time - 1][0], listLonLat[time - 1][1]];
             rotationA = SetRotation(locationS, locationE);
             console.log(rotationA);
-            time --;
+            time--;
         }
 
         locationS = ol.proj.fromLonLat([listLonLat[time][0], listLonLat[time][1]]);
@@ -272,5 +345,8 @@
         var lon = coords[0];
         console.log(`[${lon}, ${lat}],`);
     });
+
+  
+
 </script>
 </html>
